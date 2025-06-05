@@ -8,6 +8,7 @@ import { GraduationCap, Shield, Users, Vote, Star, ArrowRight, Sparkles, Wallet 
 import { useVotingStore } from "./store/voting-store";
 import { useRouter } from "next/navigation";
 import { ConnectButton } from '@mysten/dapp-kit';
+import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
 
 
 // Animated background component
@@ -134,6 +135,47 @@ const FloatingElements = () => {
   );
 };
 
+
+function ConnectedAccount() {
+    const account = useCurrentAccount();
+
+    if (!account) {
+        return null;
+    }
+
+    return (
+        <div className="mt-2 text-sm text-blue-300 text-right">
+            <div>Connected to {account.address}</div>
+            <OwnedObjects address={account.address} />
+        </div>
+    );
+}
+
+function OwnedObjects({ address }: { address: string }) {
+    const { data, isLoading, error } = useSuiClientQuery('getOwnedObjects', {
+        owner: address,
+    });
+    if (isLoading) return <div>Loading objects...</div>;
+    if (error) return <div>Error loading objects</div>;
+    if (!data) return null;
+
+    return (
+        <ul className="mt-2 text-xs text-blue-200">
+            {data.data.map((object: any) => (
+                <li key={object.data?.objectId}>
+                    <a
+                        href={`https://suiexplorer.com/object/${object.data?.objectId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline"
+                    >
+                        {object.data?.objectId}
+                    </a>
+                </li>
+            ))}
+        </ul>
+    );
+}
 // Rest of your LandingPage component (unchanged)
 export default function LandingPage() {
   const { isConnected, studentNFT } = useVotingStore();
@@ -244,7 +286,10 @@ export default function LandingPage() {
               </motion.span>
             </motion.div>
 
-            <ConnectButton/>
+            <ConnectButton />
+            <ConnectedAccount />
+          
+
             </div>
             </motion.nav>
         {/* Hero Section */}
