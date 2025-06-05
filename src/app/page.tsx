@@ -4,11 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, useAnimation, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { GraduationCap, Shield, Users, Vote, Star, ArrowRight, Sparkles, Wallet } from "lucide-react";
-import { WalletConnection } from "./components/wallet-connection";
 import { useVotingStore } from "./store/voting-store";
 import { useRouter } from "next/navigation";
+import { ConnectButton } from '@mysten/dapp-kit';
+
 
 // Animated background component
 const AnimatedBackground = () => {
@@ -137,7 +137,6 @@ const FloatingElements = () => {
 // Rest of your LandingPage component (unchanged)
 export default function LandingPage() {
   const { isConnected, studentNFT } = useVotingStore();
-  const [showWalletModal, setShowWalletModal] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const router = useRouter();
   const controls = useAnimation();
@@ -195,9 +194,7 @@ export default function LandingPage() {
       } else {
         router.push("/student");
       }
-    } else {
-      setShowWalletModal(true);
-    }
+    } 
   };
 
   return (
@@ -247,63 +244,9 @@ export default function LandingPage() {
               </motion.span>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex items-center gap-4"
-            >
-              {isConnected ? (
-                <div className="flex items-center gap-3">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500 }}
-                  >
-                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                        className="w-2 h-2 bg-green-400 rounded-full mr-2"
-                      />
-                      Connected
-                    </Badge>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button onClick={handleGetStarted} className="bg-blue-600 hover:bg-blue-700 text-white border-0">
-                      Go to Dashboard
-                      <motion.div
-                        animate={{ x: [0, 5, 0] }}
-                        transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                        className="ml-2"
-                      >
-                        <ArrowRight className="h-4 w-4" />
-                      </motion.div>
-                    </Button>
-                  </motion.div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-3">
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Button
-                      onClick={() => setShowWalletModal(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white border-0 relative overflow-hidden"
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-blue-400 to-cyan-400"
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "100%" }}
-                        transition={{ duration: 0.5 }}
-                      />
-                      <span className="relative z-10">Connect wallet</span>
-                    </Button>
-                  </motion.div>
-                </div>
-              )}
-            </motion.div>
-          </div>
-        </motion.nav>
-
+            <ConnectButton/>
+            </div>
+            </motion.nav>
         {/* Hero Section */}
         <section className="px-6 py-20">
           <div className="max-w-7xl mx-auto text-center">
@@ -402,25 +345,7 @@ export default function LandingPage() {
                 </Button>
               </motion.div>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="relative">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="text-lg px-8 py-6 border-blue-500 text-blue-400 hover:bg-blue-500/10 relative overflow-hidden group"
-                  onClick={() => setShowWalletModal(true)}
-                >
-                  <motion.div
-                    className="absolute inset-0 bg-blue-500"
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileHover={{ scale: 1, opacity: 0.1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                  <span className="relative z-10 flex items-center">
-                    <Wallet className="h-5 w-5 mr-2" />
-                    Connect Wallet
-                  </span>
-                </Button>
-              </motion.div>
+              
             </motion.div>
 
             {/* Animated Stats */}
@@ -619,19 +544,8 @@ export default function LandingPage() {
         </motion.section>
       </div>
 
-      {/* Wallet Connection Modal */}
-      {showWalletModal && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-        >
-          <div className="max-w-2xl w-full">
-            <WalletConnection onClose={() => setShowWalletModal(false)} />
-          </div>
-        </motion.div>
-      )}
+      
+      
     </div>
   );
 }
