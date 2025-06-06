@@ -10,11 +10,18 @@ import { useRouter } from "next/navigation";
 import { ConnectButton } from '@mysten/dapp-kit';
 import { useCurrentAccount, useSuiClientQuery } from '@mysten/dapp-kit';
 
-
 // Animated background component
 const AnimatedBackground = () => {
   const [windowSize, setWindowSize] = useState({ width: 0, height: 0 });
   const [isMounted, setIsMounted] = useState(false);
+
+  // Store random values for dots and particles
+  const [dots, setDots] = useState<
+    { initial: { x: number; y: number; opacity: number }; animate: { x: number; y: number; opacity: number[] }; transition: { duration: number; repeat: number; ease: string } }[]
+  >([]);
+  const [particles, setParticles] = useState<
+    { initial: { x: number; y: number }; animate: { x: number; y: number }; transition: { duration: number; repeat: number; ease: string; delay: number } }[]
+  >([]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -29,6 +36,40 @@ const AnimatedBackground = () => {
     window.addEventListener("resize", updateWindowSize);
     return () => window.removeEventListener("resize", updateWindowSize);
   }, []);
+
+  // Generate random values only on client
+  useEffect(() => {
+    if (windowSize.width === 0 || windowSize.height === 0) return;
+
+    setDots(
+      Array.from({ length: 20 }).map(() => {
+        const initialX = Math.random() * windowSize.width;
+        const initialY = Math.random() * windowSize.height;
+        const animateX = Math.random() * windowSize.width;
+        const animateY = Math.random() * windowSize.height;
+        const duration = Math.random() * 10 + 5;
+        return {
+          initial: { x: initialX, y: initialY, opacity: 0 },
+          animate: { x: animateX, y: animateY, opacity: [0, 1, 0] },
+          transition: { duration, repeat: Number.POSITIVE_INFINITY, ease: "linear" },
+        };
+      })
+    );
+
+    setParticles(
+      Array.from({ length: 50 }).map(() => {
+        const initialX = Math.random() * windowSize.width;
+        const animateX = Math.random() * windowSize.width;
+        const duration = Math.random() * 20 + 10;
+        const delay = Math.random() * 5;
+        return {
+          initial: { x: initialX, y: windowSize.height + 10 },
+          animate: { y: -10, x: animateX },
+          transition: { duration, repeat: Number.POSITIVE_INFINITY, ease: "linear", delay },
+        };
+      })
+    );
+  }, [windowSize]);
 
   if (!isMounted || windowSize.width === 0 || windowSize.height === 0) {
     return null; // Don't render until mounted and dimensions are available
@@ -55,58 +96,48 @@ const AnimatedBackground = () => {
       </svg>
 
       {/* Animated dots */}
-      {Array.from({ length: 20 }).map((_, i) => (
+      {dots.map((dot, i) => (
         <motion.div
           key={i}
           className="absolute w-1 h-1 bg-blue-400 rounded-full"
-          initial={{
-            x: Math.random() * windowSize.width,
-            y: Math.random() * windowSize.height,
-            opacity: 0,
-          }}
-          animate={{
-            x: Math.random() * windowSize.width,
-            y: Math.random() * windowSize.height,
-            opacity: [0, 1, 0],
-          }}
-          transition={{
-            duration: Math.random() * 10 + 5,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-          }}
+          initial={dot.initial}
+          animate={dot.animate}
+          transition={dot.transition}
         />
       ))}
 
       {/* Floating particles */}
-      {Array.from({ length: 50 }).map((_, i) => (
+      {particles.map((particle, i) => (
         <motion.div
           key={`particle-${i}`}
           className="absolute w-0.5 h-0.5 bg-blue-300 rounded-full"
-          initial={{
-            x: Math.random() * windowSize.width,
-            y: windowSize.height + 10,
-          }}
-          animate={{
-            y: -10,
-            x: Math.random() * windowSize.width,
-          }}
-          transition={{
-            duration: Math.random() * 20 + 10,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: "linear",
-            delay: Math.random() * 5,
-          }}
+          initial={particle.initial}
+          animate={particle.animate}
+          transition={particle.transition}
         />
       ))}
     </div>
   );
 };
 
-// FloatingElements component (unchanged)
+// FloatingElements component (hydration-safe)
 const FloatingElements = () => {
+  const [positions, setPositions] = useState<{ left: string; top: string; x: number; y: number }[]>([]);
+
+  useEffect(() => {
+    setPositions(
+      Array.from({ length: 6 }).map(() => ({
+        left: `${Math.random() * 100}%`,
+        top: `${Math.random() * 100}%`,
+        x: Math.random() * 100 - 50,
+        y: Math.random() * 100 - 50,
+      }))
+    );
+  }, []);
+
   return (
     <>
-      {Array.from({ length: 6 }).map((_, i) => (
+      {positions.map((pos, i) => (
         <motion.div
           key={i}
           className="absolute"
@@ -114,8 +145,8 @@ const FloatingElements = () => {
           animate={{
             opacity: [0, 1, 0],
             scale: [0, 1, 0],
-            x: [0, Math.random() * 100 - 50],
-            y: [0, Math.random() * 100 - 50],
+            x: [0, pos.x],
+            y: [0, pos.y],
           }}
           transition={{
             duration: 4,
@@ -124,8 +155,8 @@ const FloatingElements = () => {
             ease: "easeInOut",
           }}
           style={{
-            left: `${Math.random() * 100}%`,
-            top: `${Math.random() * 100}%`,
+            left: pos.left,
+            top: pos.top,
           }}
         >
           <div className="w-2 h-2 bg-blue-400 rounded-full blur-sm" />
@@ -135,48 +166,47 @@ const FloatingElements = () => {
   );
 };
 
-
 function ConnectedAccount() {
-    const account = useCurrentAccount();
+  const account = useCurrentAccount();
 
-    if (!account) {
-        return null;
-    }
+  if (!account) {
+    return null;
+  }
 
-    return (
-        <div className="mt-2 text-sm text-blue-300 text-right">
-            <div>Connected to {account.address}</div>
-            <OwnedObjects address={account.address} />
-        </div>
-    );
+  return (
+    <div className="mt-2 text-sm text-blue-300 text-right">
+      <div>Connected to {account.address}</div>
+      <OwnedObjects address={account.address} />
+    </div>
+  );
 }
 
 function OwnedObjects({ address }: { address: string }) {
-    const { data, isLoading, error } = useSuiClientQuery('getOwnedObjects', {
-        owner: address,
-    });
-    if (isLoading) return <div>Loading objects...</div>;
-    if (error) return <div>Error loading objects</div>;
-    if (!data) return null;
+  const { data, isLoading, error } = useSuiClientQuery('getOwnedObjects', {
+    owner: address,
+  });
+  if (isLoading) return <div>Loading objects...</div>;
+  if (error) return <div>Error loading objects</div>;
+  if (!data) return null;
 
-    return (
-        <ul className="mt-2 text-xs text-blue-200">
-            {data.data.map((object: any) => (
-                <li key={object.data?.objectId}>
-                    <a
-                        href={`https://suiexplorer.com/object/${object.data?.objectId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="underline"
-                    >
-                        {object.data?.objectId}
-                    </a>
-                </li>
-            ))}
-        </ul>
-    );
+  return (
+    <ul className="mt-2 text-xs text-blue-200">
+      {data.data.map((object: any) => (
+        <li key={object.data?.objectId}>
+          <a
+            href={`https://suiexplorer.com/object/${object.data?.objectId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            {object.data?.objectId}
+          </a>
+        </li>
+      ))}
+    </ul>
+  );
 }
-// Rest of your LandingPage component (unchanged)
+
 export default function LandingPage() {
   const { isConnected, studentNFT } = useVotingStore();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -236,7 +266,7 @@ export default function LandingPage() {
       } else {
         router.push("/student");
       }
-    } 
+    }
   };
 
   return (
@@ -288,10 +318,8 @@ export default function LandingPage() {
 
             <ConnectButton />
             <ConnectedAccount />
-          
-
-            </div>
-            </motion.nav>
+          </div>
+        </motion.nav>
         {/* Hero Section */}
         <section className="px-6 py-20">
           <div className="max-w-7xl mx-auto text-center">
@@ -389,8 +417,6 @@ export default function LandingPage() {
                   </span>
                 </Button>
               </motion.div>
-
-              
             </motion.div>
 
             {/* Animated Stats */}
@@ -588,9 +614,6 @@ export default function LandingPage() {
           </div>
         </motion.section>
       </div>
-
-      
-      
     </div>
   );
 }
