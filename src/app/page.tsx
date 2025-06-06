@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, useAnimation, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { GraduationCap, Shield, Users, Vote, Star, ArrowRight, Sparkles, Wallet } from "lucide-react";
+import { GraduationCap, Shield, Users, Vote, Star, ArrowRight, Sparkles } from "lucide-react";
 import { useVotingStore } from "./store/voting-store";
 import { useRouter } from "next/navigation";
 import { ConnectButton } from '@mysten/dapp-kit';
@@ -166,47 +166,6 @@ const FloatingElements = () => {
   );
 };
 
-function ConnectedAccount() {
-  const account = useCurrentAccount();
-
-  if (!account) {
-    return null;
-  }
-
-  return (
-    <div className="mt-2 text-sm text-blue-300 text-right">
-      <div>Connected to {account.address}</div>
-      <OwnedObjects address={account.address} />
-    </div>
-  );
-}
-
-function OwnedObjects({ address }: { address: string }) {
-  const { data, isLoading, error } = useSuiClientQuery('getOwnedObjects', {
-    owner: address,
-  });
-  if (isLoading) return <div>Loading objects...</div>;
-  if (error) return <div>Error loading objects</div>;
-  if (!data) return null;
-
-  return (
-    <ul className="mt-2 text-xs text-blue-200">
-      {data.data.map((object: any) => (
-        <li key={object.data?.objectId}>
-          <a
-            href={`https://suiexplorer.com/object/${object.data?.objectId}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            {object.data?.objectId}
-          </a>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export default function LandingPage() {
   const { isConnected, studentNFT } = useVotingStore();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -317,7 +276,6 @@ export default function LandingPage() {
             </motion.div>
 
             <ConnectButton />
-            <ConnectedAccount />
           </div>
         </motion.nav>
         {/* Hero Section */}
@@ -402,11 +360,11 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="text-lg px-8 py-6 border-red-500 text-red-400 hover:bg-red-500/10 relative overflow-hidden group"
+                  className="text-lg px-8 py-6 border-blue-500 text-blue-400 hover:bg-blue-500/10 relative overflow-hidden group"
                   onClick={() => router.push("/admin")}
                 >
                   <motion.div
-                    className="absolute inset-0 bg-red-500"
+                    className="absolute inset-0 bg-blue-500"
                     initial={{ scale: 0, opacity: 0 }}
                     whileHover={{ scale: 1, opacity: 0.1 }}
                     transition={{ duration: 0.3 }}
